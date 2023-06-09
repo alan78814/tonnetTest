@@ -38,6 +38,44 @@ async function getTonnetServerToken () {
   return  response.access_token
 }
 
+app.get('/api/setSecurity', async(req, res) => {
+  try {
+    const nowTime = moment()
+    const mode = 1
+    const room = '010101'
+
+    const token = await getTonnetServerToken ()
+    const thisheaders =  {
+      'content-type': 'application/json',
+      'Authorization': token
+    };
+    const thisBody = {
+      mode: mode,
+      token: MD5(`remote${nowTime.format('YYYYMMDD')}${room}${nowTime.format('HHmmss')}`).toString(), 
+      room: room,
+      time: nowTime.format()
+    }
+
+
+    await aClient(
+      {
+        method:'POST',
+        url: `https://192.168.0.251:8443/api/v2/remote/security/12`,
+        json: true,
+        headers: thisheaders,
+        body: thisBody,
+        rejectUnauthorized:false 
+      }
+    )
+
+  } catch (err) {
+    console.log(err)
+  }
+
+  console.log('run here2')
+  res.send('api/setSecurity');
+});
+
 app.get('/api/opendoor', async(req, res) => {
   try {
     const nowTime = moment()
