@@ -20,7 +20,7 @@ const data=[
       "photo" : "data:image/png;base64,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"
   }]
 
-async function getTonnetServerToken () {
+async function getTonnetServiceToken () {
   const response = await aClient(
     {
       method:'POST',
@@ -44,7 +44,7 @@ app.get('/api/setSecurity', async(req, res) => {
     const mode = 1
     const room = '010101'
 
-    const token = await getTonnetServerToken ()
+    const token = await getTonnetServiceToken ()
     const thisheaders =  {
       'content-type': 'application/json',
       'Authorization': token
@@ -76,10 +76,45 @@ app.get('/api/setSecurity', async(req, res) => {
   res.send('api/setSecurity');
 });
 
+app.get('/api/opendoorByCenter', async(req, res) => {
+  try {
+    const nowTime = moment();
+    const token = await getTonnetServiceToken ();
+    const relayTime = 10;
+    const devID = 16;
+    const room = "010109"
+
+    const thisHeaders = {
+      'Authorization': token
+    }
+
+    const thisBody = {
+      token: MD5(`remote${nowTime.format('YYYYMMDD')}${room}${nowTime.format('HHmmss')}`).toString(),
+      room: room,
+      time: nowTime.format(),
+      relay_time: relayTime
+    }
+
+    const response = await aClient(
+      {
+        method:'POST',
+        url: `https://192.168.0.251:8443/api/v2/remote/opendoor/${devID}`,
+        json: true,
+        body: thisBody,
+        headers: thisHeaders,
+        rejectUnauthorized:false
+      }
+    )
+  } catch (err) {
+    console.log(err)
+  }
+  res.send(`open door success`);
+});
+
 app.get('/api/opendoor', async(req, res) => {
   try {
     const nowTime = moment()
-    const response = await aCient(
+    const response = await aClient(
       {
         method:'POST',
         url: `http://192.168.0.63:80/remote/opendoor`,
@@ -101,7 +136,7 @@ app.get('/api/token', async(req, res) => {
   let token = null
 
   try {
-   token = await getTonnetServerToken ()
+   token = await getTonnetServiceToken ()
    console.log(token)
   } catch (err) {
     console.log(err)
