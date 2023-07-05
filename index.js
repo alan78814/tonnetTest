@@ -157,20 +157,18 @@ app.get('/api/uploadGuest', async (req, res) => {
       devicesIdMatchDevicesGroupNumAndIsFaceDetectorArr
     );
 
-    // // 再得到該訪客可進入的設備群組內人臉機的dev_id後進行同步
-    // await aClient({
-    //   method: 'POST',
-    //   url: `https://${tonnetServerHost}:${tonnetServerPort}/api/system/sync`,
-    //   json: true,
-    //   headers: thisHeaders,
-    //   body: [
-    //     {
-    //       dev_type: 3,
-    //       dev_id: devicesIdMatchDevicesGroupNumAndIsFaceDetectorArr,
-    //     },
-    //   ],
-    //   rejectUnauthorized: false,
-    // });
+    // 再得到該訪客可進入的設備群組內人臉機的dev_id後進行同步
+    await aClient({
+      method: 'POST',
+      url: `https://${tonnetServerHost}:${tonnetServerPort}/api/system/sync`,
+      json: true,
+      headers: thisHeaders,
+      body: {
+        dev_type: 3,
+        dev_id: devicesIdMatchDevicesGroupNumAndIsFaceDetectorArr,
+      },
+      rejectUnauthorized: false,
+    });
   } catch (err) {
     console.log(err);
   }
