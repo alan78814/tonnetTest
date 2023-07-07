@@ -189,6 +189,8 @@ app.get('/api/uploadFace', async (req, res) => {
         visitorPass,
         thisHeaders
       );
+
+      res.send('tonnet uploadFace success');
     } else {
       console.log(
         'tonnethelper uploadFace get visitorMemberID or visitorPass error'
@@ -258,55 +260,14 @@ app.get('/api/uploadGuest', async (req, res) => {
     // 通航設備只要新增人員或相片就要做一次同步到人臉機 但要先拿到該訪客可通行的人臉機的dev_id
     // 先將此筆訪客人員的pass轉換成所屬的設備群組 例如 pass = 3 => 2 = 2的0次方 + 2的1次方 => [0,1]表示設備群組1(group_num =1)和設備群組2(group_num =2)
     // 設備群組1和設備群組2 再查詢所有設備資料找出group_num符合且是人臉機的設備
-    function getDevicesGroupNumArr(num) {
-      const result = [];
-      let exponent = 0;
-
-      while (num > 0) {
-        if (num & 1) {
-          result.push(exponent + 1);
-        }
-        num >>= 1;
-        exponent++;
-      }
-
-      return result;
-    }
-    const devicesGroupNumArr = getDevicesGroupNumArr(guestPassArr[0]);
-
-    const allDevices = await aClient({
-      method: 'GET',
-      url: `https://${tonnetServerHost}:${tonnetServerPort}/api/v2/device/list`,
-      json: true,
-      headers: thisHeaders,
-      rejectUnauthorized: false,
-    });
-
-    const devicesIdMatchDevicesGroupNumAndIsFaceDetectorArr = allDevices
-      .filter((device) => {
-        return (
-          devicesGroupNumArr.includes(device.group_num) && device.dev_type === 3
-        );
-      })
-      .map((item) => Number(item.dev_id));
-
-    console.log(
-      'devicesIdMatchDevicesGroupNumAndIsFaceDetectorArr',
-      devicesIdMatchDevicesGroupNumAndIsFaceDetectorArr
+    await tonnetServerSync(
+      tonnetServerHost,
+      tonnetServerPort,
+      guestPassArr[0],
+      thisHeaders
     );
 
-    // 再得到該訪客可進入的設備群組內人臉機的dev_id後進行同步
-    await aClient({
-      method: 'POST',
-      url: `https://${tonnetServerHost}:${tonnetServerPort}/api/system/sync`,
-      json: true,
-      headers: thisHeaders,
-      body: {
-        dev_type: 3,
-        dev_id: devicesIdMatchDevicesGroupNumAndIsFaceDetectorArr,
-      },
-      rejectUnauthorized: false,
-    });
+    res.send('tonnet uploadGuest success');
   } catch (err) {
     console.log(err);
   }
