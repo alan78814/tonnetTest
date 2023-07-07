@@ -120,8 +120,6 @@ async function tonnetServerSync(
     },
     rejectUnauthorized: false,
   });
-
-  console.log('tonnethelper uploadFace success');
 }
 
 app.get('/api/uploadFace', async (req, res) => {
@@ -129,7 +127,7 @@ app.get('/api/uploadFace', async (req, res) => {
     const [tonnetServerHost, tonnetServerPort] = ['192.168.200.3', '8443'];
     const tonnetclient_id = '98f37b45-6b82-4627-aceb-824ed6be9643';
     const tonnetclient_secret = 's2soPagg9FdxsPVt0OaprlFXFmYf4qnKO83d2RzB';
-    const visitorName = '20230705';
+    const visitorName = '20230707test';
 
     const token = await getTonnetServiceToken(
       tonnetServerHost,
@@ -189,7 +187,8 @@ app.get('/api/uploadFace', async (req, res) => {
         visitorPass,
         thisHeaders
       );
-
+      
+      console.log('tonnet uploadFace success')
       res.send('tonnet uploadFace success');
     } else {
       console.log(
@@ -204,9 +203,11 @@ app.get('/api/uploadFace', async (req, res) => {
 
 app.get('/api/uploadGuest', async (req, res) => {
   try {
-    const [tonnetServerHost, tonnetServerPort] = ['192.168.0.251', '8443'];
+    const [tonnetServerHost, tonnetServerPort] = ['192.168.200.3', '8443'];
     const tonnetclient_id = '98f37b45-6b82-4627-aceb-824ed6be9643';
     const tonnetclient_secret = 's2soPagg9FdxsPVt0OaprlFXFmYf4qnKO83d2RzB';
+    const visitorName = '20230707test';
+
     const token = await getTonnetServiceToken(
       tonnetServerHost,
       tonnetServerPort,
@@ -242,12 +243,12 @@ app.get('/api/uploadGuest', async (req, res) => {
       body: [
         {
           member_id: moment().valueOf(),
-          name: '20230705',
+          name: visitorName,
           group_index: null,
           time_group_index: null,
           pass: guestPassArr[0],
           password: 'Nzc=',
-          nickname: '20230705',
+          nickname: 'testtest',
           effective: '2023-07-05T13:00:00+0800',
           expired: '2099-12-31T00:00:00+0800',
           floors: [],
@@ -267,11 +268,11 @@ app.get('/api/uploadGuest', async (req, res) => {
       thisHeaders
     );
 
+    console.log('tonnet uploadGuest success')
     res.send('tonnet uploadGuest success');
   } catch (err) {
     console.log(err);
   }
-  res.send('api/uploadGuest');
 });
 
 app.get('/api/setSecurity', async (req, res) => {
