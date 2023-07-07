@@ -5,6 +5,8 @@ const request = require('request');
 let MD5 = require('crypto-js/md5');
 const moment = require('moment');
 
+const faceImage = require('./imageData');
+
 app.use(express.json()); // 解析JSON格式的主體
 app.use(express.urlencoded({ extended: true })); // 解析urlencoded格式的主體
 
@@ -61,6 +63,128 @@ async function getTonnetServiceToken(
     console.log('getTonnetServiceToken error'.err);
   }
 }
+
+app.get('api/uploadFace', async (req, res) => {
+  try {
+    const [tonnetServerHost, tonnetServerPort] = ['192.168.0.251', '8443'];
+    const tonnetclient_id = '98f37b45-6b82-4627-aceb-824ed6be9643';
+    const tonnetclient_secret = 's2soPagg9FdxsPVt0OaprlFXFmYf4qnKO83d2RzB';
+    const visitorName = '20230705';
+
+    const token = await getTonnetServiceToken(
+      tonnetServerHost,
+      tonnetServerPort,
+      tonnetclient_id,
+      tonnetclient_secret
+    );
+
+    if (token === null || token == undefined) {
+      console.log('tonnethelper uploadFace get tonnet token error');
+      return;
+    }
+
+    const thisHeaders = {
+      Authorization: token,
+    };
+
+    // 物業只能傳訪客姓名 由通航server利用此訪客姓名找到member_id才可使用更新人臉API
+    const memberListArr = await aClient({
+      method: 'GET',
+      url: `https://${tonnetServerHost}:${tonnetServerPort}/api/v2/member/list`,
+      json: true,
+      headers: thisHeaders,
+      rejectUnauthorized: false,
+    });
+
+    const visitorMemberIDObj = memberListArr.find((obj) => {
+      return obj.name === visitorName;
+    });
+
+    const visitorMemberID = visitorMemberIDObj
+      ? visitorMemberIDObj.member_id
+      : null;
+    const visitorPass = visitorMemberIDObj
+      ? Number(visitorMemberIDObj.pass)
+      : null;
+
+    if (visitorMemberID !== null && visitorPass !== null) {
+      // 新增此訪客相片
+      await aClient({
+        method: 'POST',
+        url: `https://${tonnetServerHost}:${tonnetServerPort}/api/v2/member/${visitorMemberID}/face`,
+        json: true,
+        body: [
+          {
+            photo: faceImage,
+          },
+        ],
+        headers: thisHeaders,
+        rejectUnauthorized: false,
+      });
+
+      // 新增照片後需要進行同步
+      function getDevicesGroupNumArr(num) {
+        const result = [];
+        let exponent = 0;
+
+        while (num > 0) {
+          if (num & 1) {
+            result.push(exponent + 1);
+          }
+          num >>= 1;
+          exponent++;
+        }
+
+        return result;
+      }
+      const devicesGroupNumArr = getDevicesGroupNumArr(visitorPass);
+
+      const allDevices = await aClient({
+        method: 'GET',
+        url: `https://${tonnetServerHost}:${tonnetServerPort}/api/v2/device/list`,
+        json: true,
+        headers: thisHeaders,
+        rejectUnauthorized: false,
+      });
+
+      const devicesIdMatchDevicesGroupNumAndIsFaceDetectorArr = allDevices
+        .filter((device) => {
+          return (
+            devicesGroupNumArr.includes(device.group_num) &&
+            device.dev_type === 3
+          );
+        })
+        .map((item) => Number(item.dev_id));
+
+      if (devicesIdMatchDevicesGroupNumAndIsFaceDetectorArr.length === 0) {
+        console.log(
+          'tonnethelper uploadFace devicesIdMatchDevicesGroupNumAndIsFaceDetectorArr = 0'
+        );
+        return;
+      }
+
+      await aClient({
+        method: 'POST',
+        url: `https://${tonnetServerHost}:${tonnetServerPort}/api/system/sync`,
+        json: true,
+        headers: thisHeaders,
+        body: {
+          dev_type: 3,
+          dev_id: devicesIdMatchDevicesGroupNumAndIsFaceDetectorArr,
+        },
+        rejectUnauthorized: false,
+      });
+      console.log('tonnethelper uploadFace success');
+    } else {
+      console.log(
+        'tonnethelper uploadFace get visitorMemberID or visitorPass error'
+      );
+      return;
+    }
+  } catch (error) {
+    console.log('==tonnethelper uploadFace error:', error);
+  }
+});
 
 app.get('/api/uploadGuest', async (req, res) => {
   try {
