@@ -90,7 +90,7 @@ async function tonnetServerSync(
     method: 'GET',
     url: `https://${tonnetServerHost}:${tonnetServerPort}/api/v2/device/list`,
     json: true,
-    headers: thisHeaders,
+    headers: headers,
     rejectUnauthorized: false,
   });
 
@@ -113,7 +113,7 @@ async function tonnetServerSync(
     method: 'POST',
     url: `https://${tonnetServerHost}:${tonnetServerPort}/api/system/sync`,
     json: true,
-    headers: thisHeaders,
+    headers: headers,
     body: {
       dev_type: 3,
       dev_id: devicesIdMatchDevicesGroupNumAndIsFaceDetectorArr,
