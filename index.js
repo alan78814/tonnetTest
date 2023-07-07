@@ -123,7 +123,7 @@ app.get('/api/uploadFace', async (req, res) => {
       });
 
       // 新增照片後需要進行同步 但進行同步前需要取得該訪客允許進入的人臉機 dev_id才可打同步API
-      async function tonnetServiceSync(pass) {
+      async function tonnetServerSync(pass) {
         function getDevicesGroupNumArr(num) {
           const result = [];
           let exponent = 0;
@@ -179,7 +179,7 @@ app.get('/api/uploadFace', async (req, res) => {
         console.log('tonnethelper uploadFace success');
       }
 
-      await tonnetServiceSync(visitorPass);
+      await tonnetServerSync(visitorPass);
     } else {
       console.log(
         'tonnethelper uploadFace get visitorMemberID or visitorPass error'
@@ -187,7 +187,7 @@ app.get('/api/uploadFace', async (req, res) => {
       return;
     }
   } catch (error) {
-    console.log('==tonnethelper uploadFace error:', error);
+    console.log('tonnethelper uploadFace error:', error);
   }
 });
 
