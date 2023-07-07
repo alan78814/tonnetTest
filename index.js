@@ -122,60 +122,64 @@ app.get('/api/uploadFace', async (req, res) => {
         rejectUnauthorized: false,
       });
 
-      // 新增照片後需要進行同步
-      function getDevicesGroupNumArr(num) {
-        const result = [];
-        let exponent = 0;
+      // 新增照片後需要進行同步 但進行同步前需要取得該訪客允許進入的人臉機 dev_id才可打同步API
+      async function tonnetServiceSync(pass) {
+        function getDevicesGroupNumArr(num) {
+          const result = [];
+          let exponent = 0;
 
-        while (num > 0) {
-          if (num & 1) {
-            result.push(exponent + 1);
+          while (num > 0) {
+            if (num & 1) {
+              result.push(exponent + 1);
+            }
+            num >>= 1;
+            exponent++;
           }
-          num >>= 1;
-          exponent++;
+
+          return result;
+        }
+        const devicesGroupNumArr = getDevicesGroupNumArr(pass);
+
+        const allDevices = await aClient({
+          method: 'GET',
+          url: `https://${tonnetServerHost}:${tonnetServerPort}/api/v2/device/list`,
+          json: true,
+          headers: thisHeaders,
+          rejectUnauthorized: false,
+        });
+
+        const devicesIdMatchDevicesGroupNumAndIsFaceDetectorArr = allDevices
+          .filter((device) => {
+            return (
+              devicesGroupNumArr.includes(device.group_num) &&
+              device.dev_type === 3
+            );
+          })
+          .map((item) => Number(item.dev_id));
+
+        if (devicesIdMatchDevicesGroupNumAndIsFaceDetectorArr.length === 0) {
+          console.log(
+            'tonnethelper uploadFace devicesIdMatchDevicesGroupNumAndIsFaceDetectorArr = 0'
+          );
+          return;
         }
 
-        return result;
-      }
-      const devicesGroupNumArr = getDevicesGroupNumArr(visitorPass);
+        await aClient({
+          method: 'POST',
+          url: `https://${tonnetServerHost}:${tonnetServerPort}/api/system/sync`,
+          json: true,
+          headers: thisHeaders,
+          body: {
+            dev_type: 3,
+            dev_id: devicesIdMatchDevicesGroupNumAndIsFaceDetectorArr,
+          },
+          rejectUnauthorized: false,
+        });
 
-      const allDevices = await aClient({
-        method: 'GET',
-        url: `https://${tonnetServerHost}:${tonnetServerPort}/api/v2/device/list`,
-        json: true,
-        headers: thisHeaders,
-        rejectUnauthorized: false,
-      });
-
-      const devicesIdMatchDevicesGroupNumAndIsFaceDetectorArr = allDevices
-        .filter((device) => {
-          return (
-            devicesGroupNumArr.includes(device.group_num) &&
-            device.dev_type === 3
-          );
-        })
-        .map((item) => Number(item.dev_id));
-
-      if (devicesIdMatchDevicesGroupNumAndIsFaceDetectorArr.length === 0) {
-        console.log(
-          'tonnethelper uploadFace devicesIdMatchDevicesGroupNumAndIsFaceDetectorArr = 0'
-        );
-        return;
+        console.log('tonnethelper uploadFace success');
       }
 
-      await aClient({
-        method: 'POST',
-        url: `https://${tonnetServerHost}:${tonnetServerPort}/api/system/sync`,
-        json: true,
-        headers: thisHeaders,
-        body: {
-          dev_type: 3,
-          dev_id: devicesIdMatchDevicesGroupNumAndIsFaceDetectorArr,
-        },
-        rejectUnauthorized: false,
-      });
-      console.log('tonnethelper uploadFace success');
-      res.send('tonnethelper uploadFace success');
+      await tonnetServiceSync(visitorPass);
     } else {
       console.log(
         'tonnethelper uploadFace get visitorMemberID or visitorPass error'
@@ -408,7 +412,6 @@ app.post('/tonnetTest', (req, res) => {
   console.log('接受通航外拋事件');
   console.log(req.body);
 });
-
 
 app.get('/', (req, res) => {
   res.send('Hello World');
