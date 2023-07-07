@@ -64,7 +64,12 @@ async function getTonnetServiceToken(
   }
 }
 
-async function tonnetServerSync(tonnetServerHost, tonnetServerPort, pass) {
+async function tonnetServerSync(
+  tonnetServerHost,
+  tonnetServerPort,
+  pass,
+  headers
+) {
   function getDevicesGroupNumArr(num) {
     const result = [];
     let exponent = 0;
@@ -178,7 +183,12 @@ app.get('/api/uploadFace', async (req, res) => {
       });
 
       // 新增照片後需要進行同步 但進行同步前需要取得該訪客允許進入的人臉機 dev_id才可打同步API
-      await tonnetServerSync(tonnetServerHost, tonnetServerPort, visitorPass);
+      await tonnetServerSync(
+        tonnetServerHost,
+        tonnetServerPort,
+        visitorPass,
+        thisHeaders
+      );
     } else {
       console.log(
         'tonnethelper uploadFace get visitorMemberID or visitorPass error'
