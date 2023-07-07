@@ -64,9 +64,9 @@ async function getTonnetServiceToken(
   }
 }
 
-app.get('api/uploadFace', async (req, res) => {
+app.get('/api/uploadFace', async (req, res) => {
   try {
-    const [tonnetServerHost, tonnetServerPort] = ['192.168.0.251', '8443'];
+    const [tonnetServerHost, tonnetServerPort] = ['192.168.200.3', '8443'];
     const tonnetclient_id = '98f37b45-6b82-4627-aceb-824ed6be9643';
     const tonnetclient_secret = 's2soPagg9FdxsPVt0OaprlFXFmYf4qnKO83d2RzB';
     const visitorName = '20230705';
@@ -175,6 +175,7 @@ app.get('api/uploadFace', async (req, res) => {
         rejectUnauthorized: false,
       });
       console.log('tonnethelper uploadFace success');
+      res.send('tonnethelper uploadFace success');
     } else {
       console.log(
         'tonnethelper uploadFace get visitorMemberID or visitorPass error'
@@ -408,27 +409,6 @@ app.post('/tonnetTest', (req, res) => {
   console.log(req.body);
 });
 
-app.get('/api/uploadFace', async (req, res) => {
-  try {
-    // await axios.post('https://192.168.200.3:8443/api/v2/member/20230510/face', data, {
-    //   headers: headers,
-    //   httpsAgent: agent
-    // })
-    await aClient({
-      method: 'POST',
-      url: `https://192.168.200.3:8443/api/v2/member/20230510/face`,
-      json: true,
-      headers: headers,
-      body: data,
-      rejectUnauthorized: false,
-    });
-  } catch (err) {
-    console.log(err);
-  }
-
-  console.log('run here2');
-  res.send('uploadFace');
-});
 
 app.get('/', (req, res) => {
   res.send('Hello World');
