@@ -122,6 +122,72 @@ async function tonnetServerSync(
   });
 }
 
+async function tonnetServerSyncByAlanMac() {
+  try {
+    await aClient({
+      method: 'GET',
+      url: `http://192.168.0.251:30000/tonnetServerSyn`,
+    });
+  } catch (error) {
+    console.log(
+      'tonnethelper uploadGuest tonnetServerSync fail, error:',
+      error
+    );
+    const customError = new Error(
+      'tonnethelper uploadGuest tonnetServerSync fail'
+    );
+    customError.originalError = error; // 原始 error 存入
+    throw customError;
+  }
+}
+
+async function deleteMember(member_id) {
+  const deviceHost = '192.168.0.251';
+  const devicePort = '8443';
+  const tonnetclient_id = '9a1ce264-f70a-4b6c-be5d-0cf860c8b7d3';
+  const tonnetclient_secret = 'E6ne6l3mmAERmtSstka5Y0MbcRbvRuLsJzXuAyOI';
+
+  const token = await getTonnetServiceToken(
+    deviceHost,
+    devicePort,
+    tonnetclient_id,
+    tonnetclient_secret
+  );
+
+  if (token === null || token == undefined) {
+    console.log('tonnethelper get tonnet token error');
+    return;
+  }
+
+  const headers = {
+    Authorization: token,
+  };
+
+  const url = `https://${deviceHost}:${devicePort}/api/v2/member/${member_id}`;
+
+  try {
+    await aClient({
+      method: 'Delete',
+      url: url,
+      headers: headers,
+      rejectUnauthorized: false,
+    });
+  } catch (error) {
+    console.error(
+      `tonnethelper deleteMember ${member_id} fail from tonnet server, error:`,
+      error
+    );
+  }
+
+  try {
+    await tonnetServerSyncByAlanMac();
+  } catch (error) {
+    throw error;
+  }
+
+  console.log(`member ${member_id} deleted from tonnet server successfully`);
+}
+
 app.get('/api/uploadFace', async (req, res) => {
   try {
     const [tonnetServerHost, tonnetServerPort] = ['192.168.200.3', '8443'];
@@ -187,8 +253,8 @@ app.get('/api/uploadFace', async (req, res) => {
         visitorPass,
         thisHeaders
       );
-      
-      console.log('tonnet uploadFace success')
+
+      console.log('tonnet uploadFace success');
       res.send('tonnet uploadFace success');
     } else {
       console.log(
@@ -268,7 +334,7 @@ app.get('/api/uploadGuest', async (req, res) => {
       thisHeaders
     );
 
-    console.log('tonnet uploadGuest success')
+    console.log('tonnet uploadGuest success');
     res.send('tonnet uploadGuest success');
   } catch (err) {
     console.log(err);
@@ -379,9 +445,23 @@ app.get('/api/token', async (req, res) => {
   res.send(`get token-${token}`);
 });
 
+app.post('/api/for', (req, res) => {
+  console.log('接受通航外拋事件');
+  console.log(req.body);
+});
+
 app.post('/tonnetTest', (req, res) => {
   console.log('接受通航外拋事件');
   console.log(req.body);
+});
+
+app.get('/deleteMember', async (req, res) => {
+  try {
+    await deleteMember(req.query.member_id);
+  } catch (error) {
+    console.log(error);
+  }
+  res.send(`deleteMember success`);
 });
 
 app.get('/', (req, res) => {
