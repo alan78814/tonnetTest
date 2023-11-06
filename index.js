@@ -4,6 +4,7 @@ const aClient = require('request-promise');
 const request = require('request');
 let MD5 = require('crypto-js/md5');
 const moment = require('moment');
+const path = require('path');
 
 const faceImage = require('./imageData');
 
@@ -179,11 +180,7 @@ async function deleteMember(member_id) {
     );
   }
 
-  try {
-    await tonnetServerSyncByAlanMac();
-  } catch (error) {
-    throw error;
-  }
+  await tonnetServerSyncByAlanMac();
 
   console.log(`member ${member_id} deleted from tonnet server successfully`);
 }
@@ -398,7 +395,7 @@ app.get('/api/opendoorByCenter', async (req, res) => {
       relay_time: relayTime,
     };
 
-    const response = await aClient({
+    await aClient({
       method: 'POST',
       url: `https://192.168.0.251:8443/api/v2/remote/opendoor/${devID}`,
       json: true,
@@ -415,7 +412,7 @@ app.get('/api/opendoorByCenter', async (req, res) => {
 app.get('/api/opendoor', async (req, res) => {
   try {
     const nowTime = moment();
-    const response = await aClient({
+    await aClient({
       method: 'POST',
       url: `http://192.168.0.63:80/remote/opendoor`,
       json: true,
@@ -467,6 +464,13 @@ app.get('/deleteMember', async (req, res) => {
 app.get('/', (req, res) => {
   res.send('Hello World');
 });
+
+app.get('/:filename', (req, res) => {
+  const filename = path.join('tonnetTest', req.params.filename);
+  const filePath = path.join(__dirname, '..', filename);
+  res.sendFile(filePath);
+});
+
 
 app.listen(3000, () => {
   console.log('Server running at http://localhost:3000/');
